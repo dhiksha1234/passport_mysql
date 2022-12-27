@@ -132,18 +132,6 @@ function genPassword(password)
 }
 
 
-function isAdmin(req,res,next)
-{
-    if(req.isAuthenticated() && req.user.isAdmin==1)
-    {
-        next();
-    }
-    else
-    {
-        res.redirect('/notAuthorizedAdmin');
-    }   
-}
-
 function userExists(req,res,next)
 {
     connection.query('Select * from users where username=? ', [req.body.uname], function(error, results, fields) {
@@ -171,34 +159,19 @@ function userExists(req,res,next)
 // });
 
 /*routes*/
+//home
 app.get('/', (req, res, next) => {
     res.send('<h1>Home</h1><p>Please <a href="/register">register</a></p>');
 });
 
-app.get('/login', (req, res, next) => {
-        res.render('login')
-});
-app.get('/logout', (req, res, next) => {
-    req.logout(); //delets the user from the session
-    res.redirect('/protected-route');
-});
-app.get('/login-success', (req, res, next) => {
-    // res.send('<p>You successfully logged in. --> <a href="/protected-route">Go to protected route</a></p>');
-    res.send('<p>You successfully logged in.</p>');
-
-});
-
-app.get('/login-failure', (req, res, next) => {
-    res.send('You entered the wrong password.');
-});
-
-
+//get call for register
 app.get('/register', (req, res, next) => {
     console.log("Inside get");
     res.render('register')
     
 });
 
+//post call for register
 app.post('/register',userExists,(req,res,next)=>{
     console.log("Inside post");
     console.log(req.body.pw);
@@ -222,36 +195,57 @@ app.post('/register',userExists,(req,res,next)=>{
     res.redirect('/login');
 });
 
+//get call for login
+app.get('/login', (req, res, next) => {
+        res.render('login')
+});
+
+//post call for login
 app.post('/login',passport.authenticate('local',{failureRedirect:'/login-failure',successRedirect:'/login-success'}));
 
-app.get('/protected-route',isAuth,(req, res, next) => {
- 
-    res.send('<h1>You are authenticated</h1><p><a href="/logout">Logout and reload</a></p>');
-});
 
-app.get('/admin-route',isAdmin,(req, res, next) => {
- 
-    res.send('<h1>You are admin</h1><p><a href="/logout">Logout and reload</a></p>');
-
-});
-
-app.listen(3000, function() {
-    console.log('App listening on port 3000!')
-  });
-
-
-  app.get('/notAuthorized', (req, res, next) => {
-    console.log("Inside get");
-    res.send('<h1>You are not authorized to view the resource </h1><p><a href="/login">Retry Login</a></p>');
-    
-});
-app.get('/notAuthorizedAdmin', (req, res, next) => {
-    console.log("Inside get");
-    res.send('<h1>You are not authorized to view the resource as you are not the admin of the page  </h1><p><a href="/login">Retry to Login as admin</a></p>');
-    
-});
-app.get('/userAlreadyExists', (req, res, next) => {
+ //if the user already exist
+ app.get('/userAlreadyExists', (req, res, next) => {
     console.log("Inside get");
     res.send('<h1>Sorry This username is taken </h1><p><a href="/register">Register with different username</a></p>');
     
 });
+
+//if the login is successful
+app.get('/login-success', (req, res, next) => {
+    res.send('<p>You successfully logged in. <a href="/protected-route">check you are authenticated or not</a></p>');
+    //res.send('<p>You successfully logged in.</p>');
+
+});
+
+//if the login is failure
+app.get('/login-failure', (req, res, next) => {
+    res.send('You entered the wrong password.');
+});
+
+ 
+
+
+
+
+//if you are authenticated 
+app.get('/protected-route',isAuth,(req, res, next) => {
+ 
+    res.send('<h1>You are authenticated</h1>');
+});
+
+ 
+
+//if the user is not authorized
+app.get('/notAuthorized', (req, res, next) => {
+    console.log("Inside get");
+    res.send('<h1>You are not authorized to view the resource </h1><p><a href="/login">Retry Login</a></p>');
+    
+});
+
+ 
+
+//running on port no 3000
+app.listen(3000, function() {
+    console.log('App listening on port 3000!')
+  });
